@@ -2,6 +2,8 @@ package problems.qbf;
 
 import java.io.IOException;
 
+import problems.Evaluator.EvaluateType;
+
 /**
  * Class representing the inverse of the Quadractic Binary Function
  * ({@link QBF}), which is used since the GRASP is set by
@@ -20,8 +22,8 @@ public class QBF_Inverse extends QBF {
 	 * @throws IOException
 	 *             Necessary for I/O operations.
 	 */
-	public QBF_Inverse(String filename) throws IOException {
-		super(filename);
+	public QBF_Inverse(String filename, EvaluateType evaluateType) throws IOException {
+		super(filename, evaluateType);
 	}
 
 
@@ -32,7 +34,7 @@ public class QBF_Inverse extends QBF {
 	public Double evaluateQBF() {
 		return -super.evaluateQBF();
 	}
-	
+		
 	/* (non-Javadoc)
 	 * @see problems.qbf.QBF#evaluateInsertion(int)
 	 */

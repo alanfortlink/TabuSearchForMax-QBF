@@ -5,6 +5,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 import metaheuristics.tabusearch.AbstractTS;
+import problems.Evaluator.EvaluateType;
 import problems.qbf.QBF_Inverse;
 import solutions.Solution;
 
@@ -36,8 +37,10 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 * @throws IOException
 	 *             necessary for I/O operations.
 	 */
-	public TS_QBF(Integer tenure, Integer iterations, String filename) throws IOException {
-		super(new QBF_Inverse(filename), tenure, iterations);
+	public TS_QBF(Integer tenure, Integer iterations, String filename, EvaluateType evaluateType, LocalSearchMethod localSearchMethod) throws IOException {
+		super(new QBF_Inverse(filename, evaluateType), tenure, iterations);
+		
+		this.localSearchMethod = localSearchMethod;
 	}
 
 	/* (non-Javadoc)
@@ -223,9 +226,11 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public static void main(String[] args) throws IOException {
 
 		long startTime = System.currentTimeMillis();
-		TS_QBF tabusearch = new TS_QBF(20, 1000, "instances/qbf040");
+		TS_QBF tabusearch = new TS_QBF(20, 100000, "instances/qbf020", EvaluateType.DEFAULT, LocalSearchMethod.FIRST_IMPROVING);
 		Solution<Integer> bestSol = tabusearch.solve();
+		
 		System.out.println("maxVal = " + bestSol);
+
 		long endTime   = System.currentTimeMillis();
 		long totalTime = endTime - startTime;
 		System.out.println("Time = "+(double)totalTime/(double)1000+" seg");

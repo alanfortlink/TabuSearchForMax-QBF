@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.util.Arrays;
 import problems.Evaluator;
+import problems.Evaluator.EvaluateType;
 import solutions.Solution;
 
 /**
@@ -24,6 +25,14 @@ import solutions.Solution;
  *
  */
 public class QBF implements Evaluator<Integer> {
+	
+	public Double[] upperBound;
+	
+	public EvaluateType evaluateType;
+	
+	public void setEvaluateType(EvaluateType evaluateType){
+		this.evaluateType = evaluateType;
+	}
 
 	/**
 	 * Dimension of the domain.
@@ -50,9 +59,19 @@ public class QBF implements Evaluator<Integer> {
 	 * @throws IOException
 	 *             Necessary for I/O operations.
 	 */
-	public QBF(String filename) throws IOException {
+	public QBF(String filename, EvaluateType evaluateType) throws IOException {
+		this.evaluateType = evaluateType;
 		size = readInput(filename);
 		variables = allocateVariables();
+		upperBound = new Double[size];
+		
+		for(int i = 0; i < size; i++){
+			Double sum = 0.0;
+			for(int j = 0; j < size; j++){
+				sum += A[i][j];
+			}
+			upperBound[i] = sum;
+		}
 	}
 
 	/**
@@ -94,10 +113,8 @@ public class QBF implements Evaluator<Integer> {
 	 */
 	@Override
 	public Double evaluate(Solution<Integer> sol) {
-
 		setVariables(sol);
 		return sol.cost = evaluateQBF();
-
 	}
 
 	/**
@@ -107,7 +124,6 @@ public class QBF implements Evaluator<Integer> {
 	 * @return The value of the QBF.
 	 */
 	public Double evaluateQBF() {
-
 		Double aux = (double) 0, sum = (double) 0;
 		Double vecAux[] = new Double[size];
 
@@ -120,10 +136,9 @@ public class QBF implements Evaluator<Integer> {
 			aux = (double) 0;
 		}
 
-		return sum;
-
+		return sum;	
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -247,6 +262,10 @@ public class QBF implements Evaluator<Integer> {
 	 *         insertion.
 	 */
 	private Double evaluateContributionQBF(int i) {
+		
+		if(evaluateType == EvaluateType.SURROGATE){
+			return upperBound[i];
+		}
 
 		Double sum = 0.0;
 
@@ -334,7 +353,7 @@ public class QBF implements Evaluator<Integer> {
 	 */
 	public static void main(String[] args) throws IOException {
 
-		QBF qbf = new QBF("instances/qbf040");
+		QBF qbf = new QBF("instances/qbf040", EvaluateType.DEFAULT);
 		qbf.printMatrix();
 		Double maxVal = Double.NEGATIVE_INFINITY;
 		

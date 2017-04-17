@@ -25,7 +25,7 @@ public abstract class AbstractTS<E> {
 	 * screen
 	 */
 	
-	protected LocalSearchMethod localSearchMethod = LocalSearchMethod.BEST_IMPROVING;
+	protected LocalSearchMethod localSearchMethod;
 	
 	public static boolean verbose = true;
 

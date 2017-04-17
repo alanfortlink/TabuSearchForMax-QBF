@@ -1,5 +1,6 @@
 package problems;
 
+import problems.Evaluator.EvaluateType;
 import solutions.Solution;
 
 /**
@@ -12,6 +13,10 @@ import solutions.Solution;
  * @param <E>
  */
 public interface Evaluator<E> {
+	
+	public enum EvaluateType{DEFAULT, SURROGATE};
+	
+	public abstract void setEvaluateType(EvaluateType evaluateType);
 
 	/**
 	 * Gives the size of the problem domain. Typically this is the number of
