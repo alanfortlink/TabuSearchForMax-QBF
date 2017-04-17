@@ -88,17 +88,18 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 */
 	@Override
 	public void updateCL() {
-		
+
+		ArrayList<Integer> defaultCL = makeCL();
 		ArrayList<Integer> newCL = new ArrayList<>();
 		
-		for(Integer item : CL){
-			if(incumbentSol.contains(item+1) || incumbentSol.contains(item-1)){
+		for(Integer item : defaultCL){
+			if( incumbentSol.contains(item + 1) || incumbentSol.contains(item - 1) || incumbentSol.contains(item)){
 				continue;
 			}
 			
 			newCL.add(item);
 		}
-
+		
 		this.CL = newCL;
 	}
 
@@ -201,6 +202,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 		} else {
 			TL.add(fake);
 		}
+		
 		TL.poll();
 		if (bestCandIn != null) {
 			incumbentSol.add(bestCandIn);
@@ -221,7 +223,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public static void main(String[] args) throws IOException {
 
 		long startTime = System.currentTimeMillis();
-		TS_QBF tabusearch = new TS_QBF(20, 10000, "instances/qbf100");
+		TS_QBF tabusearch = new TS_QBF(20, 1000, "instances/qbf040");
 		Solution<Integer> bestSol = tabusearch.solve();
 		System.out.println("maxVal = " + bestSol);
 		long endTime   = System.currentTimeMillis();
