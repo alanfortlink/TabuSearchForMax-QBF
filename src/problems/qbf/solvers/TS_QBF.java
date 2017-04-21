@@ -1,8 +1,14 @@
 package problems.qbf.solvers;
 
+
+
+
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import metaheuristics.tabusearch.AbstractTS;
 import problems.Evaluator.EvaluateType;
@@ -20,8 +26,11 @@ import solutions.Solution;
  * @author ccavellucci, fusberti
  */
 public class TS_QBF extends AbstractTS<Integer> {
-	
+
 	private final Integer fake = new Integer(-1);
+
+	// Declarando os pares para fazer o first improment
+	List<Pair<Integer, Integer>> provablePairs = new ArrayList<Pair<Integer, Integer>>();
 
 	/**
 	 * Constructor for the TS_QBF class. An inverse QBF objective function is
@@ -39,7 +48,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 */
 	public TS_QBF(Integer tenure, Integer iterations, String filename, EvaluateType evaluateType, LocalSearchMethod localSearchMethod) throws IOException {
 		super(new QBF_Inverse(filename, evaluateType), tenure, iterations);
-		
+
 		this.localSearchMethod = localSearchMethod;
 	}
 
@@ -70,7 +79,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 		return _RCL;
 
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see metaheuristics.tabusearch.AbstractTS#makeTL()
 	 */
@@ -94,15 +103,15 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 		ArrayList<Integer> defaultCL = makeCL();
 		ArrayList<Integer> newCL = new ArrayList<>();
-		
+
 		for(Integer item : defaultCL){
 			if( incumbentSol.contains(item + 1) || incumbentSol.contains(item - 1) || incumbentSol.contains(item)){
 				continue;
 			}
-			
+
 			newCL.add(item);
 		}
-		
+
 		this.CL = newCL;
 	}
 
@@ -130,72 +139,102 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public Solution<Integer> neighborhoodMove() {
 
 		Double minDeltaCost;
+		Integer NULL = 10000;
 		Integer bestCandIn = null, bestCandOut = null;
+		provablePairs.clear();
 
 		minDeltaCost = Double.POSITIVE_INFINITY;
 		updateCL();
-		
-		boolean foundBetterSolution = false;
+
+		//	boolean foundBetterSolution = false;
 		// Evaluate insertions
 		for (Integer candIn : CL) {
-			Double deltaCost = ObjFunction.evaluateInsertionCost(candIn, incumbentSol);
-			if (!TL.contains(candIn) || incumbentSol.cost+deltaCost < bestSol.cost) {
-				if (deltaCost < minDeltaCost) {
-					minDeltaCost = deltaCost;
-					bestCandIn = candIn;
-					bestCandOut = null;
-					
-					foundBetterSolution = true;
-					
-					if(localSearchMethod == LocalSearchMethod.FIRST_IMPROVING){
-						break;
-					}
-				}
-			}
+
+			provablePairs.add(Pair.createPair(candIn, NULL));
+			
 		}
 		// Evaluate removals
 		for (Integer candOut : incumbentSol) {
-			if(localSearchMethod == LocalSearchMethod.FIRST_IMPROVING && foundBetterSolution){
-				break;
-			}
-			Double deltaCost = ObjFunction.evaluateRemovalCost(candOut, incumbentSol);
-			if (!TL.contains(candOut) || incumbentSol.cost+deltaCost < bestSol.cost) {
-				if (deltaCost < minDeltaCost) {
-					minDeltaCost = deltaCost;
-					bestCandIn = null;
-					bestCandOut = candOut;
-					
-					foundBetterSolution = true;
-					
-					if(localSearchMethod == LocalSearchMethod.FIRST_IMPROVING){
-						break;
-					}
-				}
-			}
+
+			provablePairs.add(Pair.createPair(NULL, candOut));
+
 		}
 		// Evaluate exchanges
 		for (Integer candIn : CL) {
-			if(localSearchMethod == LocalSearchMethod.FIRST_IMPROVING && foundBetterSolution){
-				break;
-			}
 			for (Integer candOut : incumbentSol) {
-				Double deltaCost = ObjFunction.evaluateExchangeCost(candIn, candOut, incumbentSol);
-				if ((!TL.contains(candIn) && !TL.contains(candOut)) || incumbentSol.cost+deltaCost < bestSol.cost) {
+
+				provablePairs.add(Pair.createPair(candIn, candOut));
+
+
+
+
+			}
+		}
+
+		Collections.shuffle(provablePairs);
+		//nas minhas possiveis solucoes
+		//eu pego uma e vejo se ela eh viavel
+
+		for(Pair<Integer, Integer> pair : provablePairs) {
+			//verifico se for insercao, remocao ou troca
+			Double deltaCost = null;
+			
+
+			if(pair.getLeft() == NULL || pair.getRight() == NULL){
+				//insert
+				if(pair.getRight() == NULL){
+					
+					
+					deltaCost = ObjFunction.evaluateInsertionCost(pair.getLeft(), incumbentSol);
+					if (!TL.contains(pair.getLeft()) || incumbentSol.cost+deltaCost < bestSol.cost) {
+						if (deltaCost < minDeltaCost) {
+							minDeltaCost = deltaCost;
+							bestCandIn = pair.getLeft();
+							bestCandOut = null;
+						}
+					}
+
+
+				}
+				//remocao
+				else{
+
+					
+					deltaCost = ObjFunction.evaluateRemovalCost(pair.getRight(), incumbentSol);
+					if (!TL.contains(pair.getRight()) || incumbentSol.cost+deltaCost < bestSol.cost) {
+						if (deltaCost < minDeltaCost) {
+							minDeltaCost = deltaCost;
+							bestCandIn = null;
+							bestCandOut = pair.getRight();
+						}
+					}
+
+				}
+
+
+			}	//troca
+			else
+			{
+				
+				deltaCost = ObjFunction.evaluateExchangeCost(pair.getLeft(), pair.getRight(), incumbentSol);
+				if ((!TL.contains(pair.getLeft()) && !TL.contains(pair.getRight())) || incumbentSol.cost+deltaCost < bestSol.cost) {
 					if (deltaCost < minDeltaCost) {
 						minDeltaCost = deltaCost;
-						bestCandIn = candIn;
-						bestCandOut = candOut;
+						bestCandIn = pair.getLeft();
+						bestCandOut = pair.getRight();
 						
-						foundBetterSolution = true;
-						
-						if(localSearchMethod == LocalSearchMethod.FIRST_IMPROVING){
-							break;
-						}
 					}
 				}
 			}
+			
+			//Aqui eu estou usando os dois metodos
+			//se chegar como send first e se entrar eu paro a busca
+			//se chegar como best, entao este codicao nunca sera satisfeita
+			if (minDeltaCost < 0.0 && localSearchMethod == LocalSearchMethod.FIRST_IMPROVING )  break;
+
+
 		}
-		
+
 		// Implement the best non-tabu move
 		TL.poll();
 		if (bestCandOut != null) {
@@ -205,7 +244,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 		} else {
 			TL.add(fake);
 		}
-		
+
 		TL.poll();
 		if (bestCandIn != null) {
 			incumbentSol.add(bestCandIn);
@@ -215,7 +254,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 			TL.add(fake);
 		}
 		ObjFunction.evaluate(incumbentSol);
-		
+
 		return null;
 	}
 
@@ -226,9 +265,9 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public static void main(String[] args) throws IOException {
 
 		long startTime = System.currentTimeMillis();
-		TS_QBF tabusearch = new TS_QBF(20, 100000, "instances/qbf020", EvaluateType.DEFAULT, LocalSearchMethod.FIRST_IMPROVING);
+		TS_QBF tabusearch = new TS_QBF(20, 100000, "instances/qbf100", EvaluateType.DEFAULT, LocalSearchMethod.BEST_IMPROVING);
 		Solution<Integer> bestSol = tabusearch.solve();
-		
+
 		System.out.println("maxVal = " + bestSol);
 
 		long endTime   = System.currentTimeMillis();
