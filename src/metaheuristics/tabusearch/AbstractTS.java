@@ -135,6 +135,7 @@ public abstract class AbstractTS<E> {
 	 * @return An local optimum solution.
 	 */
 	public abstract Solution<E> neighborhoodMove();
+	public abstract Solution<E> neighborhoodMoveFirst();
 
 	/**
 	 * Constructor for the AbstractTS class.
@@ -222,7 +223,13 @@ public abstract class AbstractTS<E> {
 		constructiveHeuristic();
 		TL = makeTL();
 		for (int i = 0; i < iterations; i++) {
-			neighborhoodMove();
+			if (localSearchMethod.FIRST_IMPROVING == localSearchMethod){
+				neighborhoodMoveFirst();
+			
+			}else
+			{
+				neighborhoodMove();
+			}
 			if (bestSol.cost > incumbentSol.cost) {
 				bestSol = new Solution<E>(incumbentSol);
 				if (verbose)
