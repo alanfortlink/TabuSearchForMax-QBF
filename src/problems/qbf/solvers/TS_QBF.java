@@ -141,7 +141,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 * composed by the neighborhood moves Insertion, Removal and 2-Exchange.
 	 */
 	@Override
-	public Solution<Integer> neighborhoodMove() {
+	public Solution<Integer> neighborhoodMoveFirst() {
 
 		Double minDeltaCost;
 		Integer NULL = 1000000;
@@ -176,12 +176,10 @@ public class TS_QBF extends AbstractTS<Integer> {
 			}
 		}
 
-		//se for local, entao shuffle
-		if (localSearchMethod == LocalSearchMethod.FIRST_IMPROVING ) {
-			System.out.println("entrei");
+		
 			Collections.shuffle(provablePairs);
 			
-		}
+
 		
 
 		for(Pair<Integer, Integer> pair : provablePairs) {
@@ -239,7 +237,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 			//Aqui eu estou usando os dois metodos
 			//se chegar como send first e se entrar eu paro a busca
 			//se chegar como best, entao este codicao nunca sera satisfeita
-			if (minDeltaCost < 0.0 && localSearchMethod == LocalSearchMethod.FIRST_IMPROVING )  break;
+			if (minDeltaCost < 0.0 )  break;
 
 
 		}
@@ -269,6 +267,77 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 		return null;
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * The local search operator developed for the QBF objective function is
+	 * composed by the neighborhood moves Insertion, Removal and 2-Exchange.
+	 */
+	@Override
+	public Solution<Integer> neighborhoodMove() {
+
+		Double minDeltaCost;
+		Integer bestCandIn = null, bestCandOut = null;
+
+		minDeltaCost = Double.POSITIVE_INFINITY;
+		updateCL();
+		// Evaluate insertions
+		for (Integer candIn : CL) {
+			Double deltaCost = ObjFunction.evaluateInsertionCost(candIn, incumbentSol);
+			if (!TL.contains(candIn) || incumbentSol.cost+deltaCost < bestSol.cost) {
+				if (deltaCost < minDeltaCost) {
+					minDeltaCost = deltaCost;
+					bestCandIn = candIn;
+					bestCandOut = null;
+				}
+			}
+		}
+		// Evaluate removals
+		for (Integer candOut : incumbentSol) {
+			Double deltaCost = ObjFunction.evaluateRemovalCost(candOut, incumbentSol);
+			if (!TL.contains(candOut) || incumbentSol.cost+deltaCost < bestSol.cost) {
+				if (deltaCost < minDeltaCost) {
+					minDeltaCost = deltaCost;
+					bestCandIn = null;
+					bestCandOut = candOut;
+				}
+			}
+		}
+		// Evaluate exchanges
+		for (Integer candIn : CL) {
+			for (Integer candOut : incumbentSol) {
+				Double deltaCost = ObjFunction.evaluateExchangeCost(candIn, candOut, incumbentSol);
+				if ((!TL.contains(candIn) && !TL.contains(candOut)) || incumbentSol.cost+deltaCost < bestSol.cost) {
+					if (deltaCost < minDeltaCost) {
+						minDeltaCost = deltaCost;
+						bestCandIn = candIn;
+						bestCandOut = candOut;
+					}
+				}
+			}
+		}
+		// Implement the best non-tabu move
+		TL.poll();
+		if (bestCandOut != null) {
+			incumbentSol.remove(bestCandOut);
+			CL.add(bestCandOut);
+			TL.add(bestCandOut);
+		} else {
+			TL.add(fake);
+		}
+		TL.poll();
+		if (bestCandIn != null) {
+			incumbentSol.add(bestCandIn);
+			CL.remove(bestCandIn);
+			TL.add(bestCandIn);
+		} else {
+			TL.add(fake);
+		}
+		ObjFunction.evaluate(incumbentSol);
+		
+		return null;
+	}
 
 	/**
 	 * A main method used for testing the TS metaheuristic.
@@ -277,7 +346,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public static void main(String[] args) throws IOException {
 
 		long startTime = System.currentTimeMillis();
-		TS_QBF tabusearch = new TS_QBF(null, 100000, "instances/qbf060", EvaluateType.DEFAULT, LocalSearchMethod.BEST_IMPROVING);
+		TS_QBF tabusearch = new TS_QBF(null, 100000, "instances/qbf040", EvaluateType.DEFAULT, LocalSearchMethod.BEST_IMPROVING);
 		Solution<Integer> bestSol = tabusearch.solve();
 
 		System.out.println("maxVal = " + bestSol);
