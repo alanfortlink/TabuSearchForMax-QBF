@@ -47,7 +47,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 */
 	public TS_QBF(Integer tenure, Integer iterations, String filename, EvaluateType evaluateType, LocalSearchMethod localSearchMethod) throws IOException {
 		super(new QBF_Inverse(filename, evaluateType), tenure, iterations);
-		//this.tenure = (int) (ObjFunction.getDomainSize() * 0.15);
+		this.tenure = (int) (ObjFunction.getDomainSize() * 0.15);
 		this.localSearchMethod = localSearchMethod;
 		
 		System.out.println("tenure: "+this.tenure);
@@ -346,7 +346,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public static void main(String[] args) throws IOException {
 
 		long startTime = System.currentTimeMillis();
-		TS_QBF tabusearch = new TS_QBF(20, 100000, "instances/qbf080", EvaluateType.DEFAULT, LocalSearchMethod.FIRST_IMPROVING);
+		TS_QBF tabusearch = new TS_QBF(null, 100000, "instances/qbf100", EvaluateType.SURROGATE, LocalSearchMethod.FIRST_IMPROVING);
 		Solution<Integer> bestSol = tabusearch.solve();
 
 		System.out.println("maxVal = " + bestSol);
