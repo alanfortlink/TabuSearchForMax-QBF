@@ -6,7 +6,6 @@ package problems.qbf.solvers;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,8 +47,12 @@ public class TS_QBF extends AbstractTS<Integer> {
 	 */
 	public TS_QBF(Integer tenure, Integer iterations, String filename, EvaluateType evaluateType, LocalSearchMethod localSearchMethod) throws IOException {
 		super(new QBF_Inverse(filename, evaluateType), tenure, iterations);
-
+		this.tenure = (int) (ObjFunction.getDomainSize() * 0.15);
 		this.localSearchMethod = localSearchMethod;
+		
+		System.out.println("tenure: "+this.tenure);
+		System.out.println("localSearchMethod: "+this.localSearchMethod);
+		
 	}
 
 	/* (non-Javadoc)
@@ -58,6 +61,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	@Override
 	public ArrayList<Integer> makeCL() {
 
+		
 		ArrayList<Integer> _CL = new ArrayList<Integer>();
 		for (int i = 0; i < ObjFunction.getDomainSize(); i++) {
 			Integer cand = new Integer(i);
@@ -87,6 +91,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public ArrayDeque<Integer> makeTL() {
 
 		ArrayDeque<Integer> _TS = new ArrayDeque<Integer>(2*tenure);
+		//System.out.println(tenure);
 		for (int i=0; i<2*tenure; i++) {
 			_TS.add(fake);
 		}
@@ -139,7 +144,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public Solution<Integer> neighborhoodMove() {
 
 		Double minDeltaCost;
-		Integer NULL = 10000;
+		Integer NULL = 1000000;
 		Integer bestCandIn = null, bestCandOut = null;
 		provablePairs.clear();
 
@@ -171,9 +176,13 @@ public class TS_QBF extends AbstractTS<Integer> {
 			}
 		}
 
-		Collections.shuffle(provablePairs);
-		//nas minhas possiveis solucoes
-		//eu pego uma e vejo se ela eh viavel
+		//se for local, entao shuffle
+		if (localSearchMethod == LocalSearchMethod.FIRST_IMPROVING ) {
+			System.out.println("entrei");
+			Collections.shuffle(provablePairs);
+			
+		}
+		
 
 		for(Pair<Integer, Integer> pair : provablePairs) {
 			//verifico se for insercao, remocao ou troca
@@ -234,6 +243,9 @@ public class TS_QBF extends AbstractTS<Integer> {
 
 
 		}
+		
+		//TODO: avaliar se satisfaz a restricao. NAO SEI SE PRECISA AQUI
+		//updateCL();
 
 		// Implement the best non-tabu move
 		TL.poll();
@@ -265,7 +277,7 @@ public class TS_QBF extends AbstractTS<Integer> {
 	public static void main(String[] args) throws IOException {
 
 		long startTime = System.currentTimeMillis();
-		TS_QBF tabusearch = new TS_QBF(20, 100000, "instances/qbf100", EvaluateType.DEFAULT, LocalSearchMethod.BEST_IMPROVING);
+		TS_QBF tabusearch = new TS_QBF(null, 100000, "instances/qbf060", EvaluateType.DEFAULT, LocalSearchMethod.BEST_IMPROVING);
 		Solution<Integer> bestSol = tabusearch.solve();
 
 		System.out.println("maxVal = " + bestSol);
