@@ -72,6 +72,13 @@ public class QBF implements Evaluator<Integer> {
 			}
 			upperBound[i] = sum;
 		}
+		//surrogate
+		for(int i = 0; i < size; i++){
+			for(int j = 0; j < size; j++){
+				upperBound[i] +=  A[j][i];
+			}
+			
+		}
 	}
 
 	/**
